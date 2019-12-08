@@ -15,8 +15,18 @@ import pytesseract
 import cv2
 import numpy as np
 from skimage.measure import compare_ssim
+import datetime
+import logging
 
 class ADB:
+    LOGGING_FORMAT = '%(asctime)s %(levelname)s: %(message)s'
+    DATE_FORMAT = '%Y%m%d %H:%M:%S'
+    DATE_TODAY = '{}{}{}'.format(datetime.datetime.now().year,datetime.datetime.now().month,datetime.datetime.now().day)
+    LOG_FILE = './logs/Logs_{}.log'.format(DATE_TODAY)
+    if not os.path.exists(LOG_FILE):
+        files = open(LOG_FILE,"w+")
+        files.close()
+    logging.basicConfig(level=logging.INFO, filename='./logs/Logs_{}.log'.format(DATE_TODAY), format=LOGGING_FORMAT, datefmt=DATE_FORMAT)
     def __init__(self,device_Name,screen_Size):
         #self.adb_Path = "C:/Program Files (x86)/Nox/bin/nox_adb.exe"  #夜神
         self.adb_Path = "C:/XuanZhi/LDPlayer/adb.exe"   #雷電
@@ -61,6 +71,7 @@ class ADB:
         if device_Name == None:
             device_Name=self.device_Name
         if save_path == None:
+            logging.error('Error: 請輸入保存圖片的路徑')
             print('wrong!請輸入保存圖片的路徑')
         else:
             var = "\'s/\r$//\'"
@@ -203,16 +214,19 @@ class ADB:
     def Recognize_Img(self,mode='None'):
         img_Path = r'./image/openCV_Img/'
         if mode == 'star':
+            logging.info('判斷五星角色數量')
             print('開始判斷五星角色數量')
             img_Sample = cv2.imread(img_Path+'five_Star11.png',0)
             starNumber = 0
             for i in range(1,15):
                 img_Compare = cv2.imread(img_Path+str(i)+'.jpg',0)
                 score = compare_ssim(img_Sample,img_Compare)
+                logging.info('第 {} 隻為五星的相似度為 {}%'.format(i,round(score*100,2)))
                 print('第 {} 隻為五星的相似度為 {}%'.format(i,round(score*100,2)))
                 if score > 0.85:
                     starNumber = starNumber +1
                 #print('number_{}\'s score is {}'.format(i,score))
+            logging.info('總共抽到 {} 隻五星角色'.format(starNumber))
             print('總共抽到 {} 隻五星角色'.format(starNumber))
             return starNumber
         img_Sample = cv2.imread(img_Path+mode+'.png',0)
@@ -224,6 +238,7 @@ class ADB:
         score = compare_ssim(img_Sample,img_Compare)
         if score >= 0.95:
             score = round(score*100,2)
+            logging.info('相似度: {}%, 判定成功'.format(score))
             print('相似度: {}%, 判定成功'.format(score))
             return True
         return False
@@ -260,9 +275,13 @@ class ADB:
             code = error.returncode
             #print('the code is :',output)
             if output == b'error: device not found\r\n':
+                logging.error(b'error: device not found')
+                logging.INFO('執行adb kill-server, 並等待 5 秒重啟時間')
                 subprocess.Popen([self.adb_Path,"kill-server"])
                 time.sleep(5)
+                logging.INFO('重新呼叫command line')
                 subprocess.Popen(command,shell=True)
+                logging.INFO('重新呼叫成功')
 
         #subprocess.Popen(command)
         #except 
