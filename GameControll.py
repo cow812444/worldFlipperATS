@@ -17,7 +17,8 @@ class controller:
     logging.basicConfig(level=logging.INFO, filename=LOG_FILE, format=LOGGING_FORMAT, datefmt=DATE_FORMAT)
     def __init__(self):
         #self.ADB = ADB(device_Name='127.0.0.1:62001',screen_Size=(720,1280))  #夜神
-        self.ADB = ADB(device_Name='emulator-5556',screen_Size=(560,960))
+        self.ADB = ADB(device_Name='emulator-5554',screen_Size=(560,960))
+        #self.ADB = ADB(device_Name='emulator-5556',screen_Size=(560,960))
 
     def Game_Start(self):
         logging.info('啟動遊戲({}),等待 5 秒'.format('air.jp.co.cygames.worldflipper/.AppEntry'))
@@ -25,9 +26,9 @@ class controller:
         time.sleep(5)
 
     def Game_Stop(self):
-        logging.info('關閉遊戲({}),等待 2 秒'.format('air.jp.co.cygames.worldflipper'))
+        logging.info('關閉遊戲({}),等待 5 秒'.format('air.jp.co.cygames.worldflipper'))
         self.ADB.Shut_Down_Game(Game_Activity_Name='air.jp.co.cygames.worldflipper')
-        time.sleep(2)
+        time.sleep(5)
 
     def Delete_Record(self):
         logging.info('為了刪除紀錄，開始判斷是否進入遊戲主頁面')
@@ -39,7 +40,8 @@ class controller:
         time.sleep(2)
         self.ADB.Touch(392,482)  ##清除紀錄選項(垃圾桶)
         time.sleep(2)
-        self.ADB.Touch(395,635)  ## OK (red-button)
+        self.ADB.Touch(391,693)  ## OK  12/14更新位置
+        #self.ADB.Touch(395,635)  ## OK (red-button)   old
         time.sleep(1)
         self.ADB.Touch(395,635)  ## OK_double-check (red-button)
         time.sleep(8)
@@ -134,6 +136,7 @@ class controller:
             stat = self.ADB.Recognize_Img(mode='gotpriceconfirm-button')
         logging.info('已收到送禮，按下接收')
         print('已收到送禮，按下接收')
+        time.sleep(1)
         self.ADB.Touch(351,641)  ##接收禮物按鈕
         logging.info('開始判斷是否是否出現ok')
         print('開始判斷是否是否出現ok')
@@ -145,11 +148,12 @@ class controller:
             stat = self.ADB.Recognize_Img(mode='afterpriceconfirmok-button')
         logging.info('已出現，按下OK確認')
         print('已出現，按下OK確認')
-        self.ADB.Touch(351,641)  ##OK
         time.sleep(1)
+        self.ADB.Touch(351,641)  ##OK
+        time.sleep(1.5)
         logging.info('進行十連抽')
         self.ADB.Touch(351,641)  ##十連抽
-        time.sleep(1)
+        time.sleep(1.5)
         self.ADB.Touch(351,641)  ##十連抽-確定
         logging.info('開始判斷是否找到skip按鈕')
         print('開始判斷是否找到skip按鈕')
@@ -166,7 +170,7 @@ class controller:
         self.ADB.Image_Grab(mode='get_member-button')
         stat = self.ADB.Recognize_Img(mode='member-button')
         while stat != True:  ##function 判斷是否出現包包
-            self.ADB.Touch(529,25)
+            #self.ADB.Touch(529,25
             self.ADB.Touch(229,928)
             self.ADB.Image_Grab(mode='get_member-button')
             stat = self.ADB.Recognize_Img(mode='member-button')
@@ -185,7 +189,7 @@ class controller:
         print('開始判斷角色星數')
         starNumber = self.ADB.Recognize_Img(mode='star')
         self.ADB.Touch(35,921)  ##離開角色包包
-        if starNumber >=1:
+        if starNumber >=2:
             logging.info('得到結果,獲得五星角色 {} 隻,開始截圖保存至指定目錄'.format(starNumber))
             print('得到結果,獲得五星角色 {} 隻,開始截圖保存至指定目錄'.format(starNumber))
             self.ADB.Game_ScreenHot_By_Adb(save_path='./image/account/waitForAnalysis.jpg')
@@ -203,7 +207,7 @@ class controller:
         logging.info('已回到首頁，進入\'其他\'選單')
         print('已回到首頁，進入\'其他\'選單')
         self.ADB.Touch(492,921)  #進入'其他'選單
-        time.sleep(1)
+        time.sleep(1.5)
         self.ADB.Touch(267,851)  #點擊引繼
         logging.info('判斷是否已進到準備引繼的選單')
         print('開始判斷是否已進到準備引繼的選單')
@@ -254,16 +258,170 @@ class controller:
 
     def Check_Stat(self,mode=None):
         time.sleep(3)
+        count = 0
         self.ADB.Image_Grab(mode=('get_'+mode))
         stat = self.ADB.Recognize_Img(mode=mode)
         while stat != True:
+            if mode == 'delete-button' and count >60:
+                logging.error('當機！關閉遊戲並等待 3 秒後重啟')
+                self.ADB.Start_Game(Game_Activity_Name='air.jp.co.cygames.worldflipper/.AppEntry')
+                time.sleep(3)
             #print('目前狀態: ', stat)
+            count = count +1
             self.ADB.Image_Grab(mode=('get_'+mode))
             stat = self.ADB.Recognize_Img(mode=mode)
         #time.sleep(0.3)
 
-    
-        
+    ########################################################################
+    ###
+    ###    自動開房
+    ###
+    ########################################################################
+    def Selete_Boss(self,boss_Number=0):
+        logging.info('判斷是否已到boss選單')
+        print('開始判斷是否已到boss選單')
+        self.Check_Stat(mode='87snake-button')
+        time.sleep(1)
+        logging.info('已進入boss選單主頁面，開始開房')
+        print('已進入boss選單主頁面，開始開房')
+        if boss_Number == 0:
+            self.ADB.Touch(79,449) ##大蛇
+        if boss_Number == 1:
+            self.ADB.Touch(82,549) ##光上
+        if boss_Number == 2:
+            self.ADB.Touch(88,666) ##白虎
+        if boss_Number == 3:
+            self.ADB.Touch(82,763) ##暗上
+        if boss_Number == 4:
+            self.ADB.Touch(74,859) ##水上
+        if boss_Number == 5:
+            self.ADB.Swipe(273,845,273,214)
+            time.sleep(0.4)
+            self.ADB.Touch(273,586)##火上
+        if boss_Number == 6:
+            self.ADB.Swipe(273,845,273,214)
+            time.sleep(0.4)
+            self.ADB.Touch(273,703)##不死
+        if boss_Number == 7:
+            self.ADB.Swipe(273,845,273,214)
+            time.sleep(0.4)
+            self.ADB.Touch(273,808)##貓頭鷹
+        time.sleep(1)
+        self.ADB.Touch(269,351)
+        time.sleep(1)
+        self.ADB.Touch(278,713)
+        time.sleep(1)
+        pass
+
+    def Check_DoudlePrice(self):
+        pass
+
+    def Check_MultiPlay(self):
+        pass
+
+    def Check_SecondMenber(self,party_Member=0):
+        logging.info('判斷是否進入第二名成員')
+        print('判斷是否進入第二名成員')
+        self.ADB.Image_Grab(mode='get_roomstatSecondMenberStat-button')
+        stat = self.ADB.Recognize_Img(mode='roomstatSecondMenberStat-button')
+        while stat != False:
+            roomStat = self.Is_Dismissed()
+            if roomStat == True:
+                logging.info('房間已被解散')
+                print('房間已被解散')
+                return 'dismissed'
+            self.ADB.Image_Grab(mode='get_roomstatSecondMenberStat-button')
+            stat = self.ADB.Recognize_Img(mode='roomstatSecondMenberStat-button')
+        logging.info('已有第二名成員')
+        print('已有第二名成員')
+        if party_Member == 2:
+            logging.info('已滿人，出發')
+            print('已滿人，出發')
+            time.sleep(1)
+            self.ADB.Touch(398,629)
+            time.sleep(1)
+            return 'party is full!'
+            pass
+        time.sleep(1)
+        return 'second member joined!'
+        pass
+
+    def Is_FullPayty(self):
+        logging.info('判斷是否滿人')
+        print('判斷是否滿人')
+        self.ADB.Image_Grab(mode='get_roomstat-button')
+        stat = self.ADB.Recognize_Img(mode='roomstat-button')
+        while stat != False:
+            roomStat = self.Is_Dismissed()
+            if roomStat == True:
+                logging.info('房間已被解散')
+                print('房間已被解散')
+                return 'dismissed'
+            self.ADB.Image_Grab(mode='get_roomstat-button')
+            stat = self.ADB.Recognize_Img(mode='roomstat-button')
+        logging.info('已滿人，出發')
+        print('已滿人，出發')
+        time.sleep(1)
+        self.ADB.Touch(398,629)
+        time.sleep(1)
+        return 'party is full!'
+        pass
+
+    def Is_RoomCreated(self,party_Member=0):
+        logging.info('判斷是否已開啟房間')
+        print('判斷是否已開啟房間')
+        self.Check_Stat(mode='roomstat-button')
+        logging.info('已建立房間')
+        print('已建立房間')
+        time.sleep(1)
+        self.ADB.Touch(73,628)  ##按下準備
+        time.sleep(0.6)
+        self.ADB.Touch(270,708) ##按下招募
+        time.sleep(0.6)
+        self.ADB.Touch(256,402) ##按下招募好友
+        if party_Member != 2:
+            time.sleep(0.6)
+            self.ADB.Touch(270,708) ##按下招募-第二次
+            time.sleep(0.6)
+            self.ADB.Touch(278,490) ##按下招募鈴鐺
+        time.sleep(1)
+        pass
+
+    def Is_Dismissed(self):
+        logging.info('判斷是否被解散房間')
+        print('判斷是否被解散房間')
+        self.ADB.Image_Grab(mode='get_dismissed-button')
+        stat = self.ADB.Recognize_Img(mode='dismissed-button')
+        return stat   ##ok button in 268,620
+        pass
+
+    def Check_In_Boss_Fight(self):
+        logging.info('判斷是否已開始戰鬥')
+        print('判斷是否已開始戰鬥')
+        self.ADB.Image_Grab(mode='get_bossFightStat-button')
+        stat = self.ADB.Recognize_Img(mode='bossFightStat-button')
+        while stat != True:
+            roomStat = self.Is_Dismissed()
+            if roomStat == True:
+                logging.info('房間已被解散')
+                print('房間已被解散')
+                return 'dismissed'
+            self.ADB.Touch(398,629)
+            self.ADB.Image_Grab(mode='get_bossFightStat-button')
+            stat = self.ADB.Recognize_Img(mode='bossFightStat-button')
+        logging.info('已開始戰鬥，執行退出戰鬥')
+        print('已開始戰鬥，執行退出戰鬥')
+        time.sleep(1)
+        self.ADB.Touch(33,54)
+        time.sleep(1)
+        self.ADB.Touch(25,929)
+        time.sleep(1)
+        self.ADB.Touch(399,622)
+        time.sleep(1)
+        return 'go back to menu'
+        pass
+
+
 
 
 

@@ -23,7 +23,7 @@ class Main:
                     [79,752,145,768],[193,752,259,768],[307,752,373,768],[421,752,487,768],
                     [134,902,200,918],[248,902,314,918],[362,902,428,918]
                 ]
-        #self.Game_Controller.ADB.Image_Grab(mode='get_afterpriceconfirmok-button')
+        #self.Game_Controller.ADB.Image_Grab(mode='get_roomstatSecondMenberStat-button')
         #if self.Game_Controller.ADB.Recognize_Img(mode='setaccount-button'):
         #    print('有找到')
         #else:
@@ -42,13 +42,38 @@ class Main:
             self.Game_Controller.Login_Game(achiveTime='secondTime')  ##登入帳號
             self.Game_Controller.Check_Box()  #確認包包
             starNumber = self.Game_Controller.Star_Analysis()  ##判斷角色星數
-            if starNumber >= 1:
+            if starNumber >= 2:
                 self.Game_Controller.Get_Account_ID()  ##獲得引繼碼 & 設定密碼
                 self.Game_Controller.Recognize_Account(starNumber=starNumber)  ##OCR引繼碼存檔
             self.Game_Controller.Game_Stop()  ##關閉遊戲
+
+    def run_loop_boss(self):
+        while True:
+            boss_Number = 5
+            party_Member= 2
+            self.Game_Controller.Selete_Boss(boss_Number=boss_Number)
+            self.Game_Controller.Is_RoomCreated(party_Member=party_Member)
+            stat = self.Game_Controller.Check_SecondMenber(party_Member=party_Member)
+            if stat == 'dismissed':
+                time.sleep(1)
+                self.Game_Controller.ADB.Touch(268,620)
+                continue
+            if party_Member != 2:
+                stat = self.Game_Controller.Is_FullPayty()
+            if stat == 'dismissed':
+                time.sleep(1)
+                self.Game_Controller.ADB.Touch(268,620)
+                continue
+            stat = self.Game_Controller.Check_In_Boss_Fight()
+            if stat == 'dismissed':
+                time.sleep(1)
+                self.Game_Controller.ADB.Touch(268,620)
+                continue
+        pass
 
 
 if __name__ == '__main__':
     ojb = Main()
     #ojb.Testz()
-    ojb.run()
+    #ojb.run()
+    ojb.run_loop_boss()

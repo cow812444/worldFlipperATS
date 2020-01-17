@@ -41,6 +41,8 @@ class ADB:
         if device_Name ==None:
             device_Name = self.device_Name
             #adb -s 127.0.0.1:62001 shell am start -n air.jp.co.cygames.worldflipper/.AppEntry
+        #self.adb_call(device_Name,['kill-server'])
+        #time.sleep(2)    
         self.adb_call(device_Name, ['shell', 'am', 'start', '-n', Game_Activity_Name])
 
     def Shut_Down_Game(self, Game_Activity_Name, device_Name=None):
@@ -201,6 +203,18 @@ class ADB:
             imgs = img[663:682, 244:287]
         if mode =='get_got4starconfirm-button':  ##239,607,291,628  got4starconfirm-button
             imgs = img[607:628, 239:291]
+        if mode =='get_87snake-button':  ##18,408,134,483   大蛇
+            imgs = img[408:483, 18:134]
+        if mode =='get_LightHigh-button':  ##19,516,128,590   光上
+            imgs = img[516:590, 19:128]
+        if mode =='get_roomstat-button':  ##368,213,497,280  第三個隊員位置狀態
+            imgs = img[213:280, 368:497]
+        if mode =='get_dismissed-button':  ##30,413,505,448  房間被解散
+            imgs = img[413:448, 30:505]
+        if mode =='get_bossFightStat-button':  ##15,41,46,67
+            imgs = img[41:67, 15:46]
+        if mode =='get_roomstatSecondMenberStat-button':  ##198,216,322,273
+            imgs = img[216:273, 198:322]
         img_np = np.array(imgs)
         frame = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
         cv2.imwrite('.'+tmp_grab_path+'checkPoint.jpg', frame)
@@ -209,7 +223,7 @@ class ADB:
             img_np = np.array(imgs)
             frame = cv2.cvtColor(img_np, cv2.COLOR_BGR2RGB)
             cv2.imwrite('.'+tmp_grab_path+mode+'.jpg', frame)
-        #cv2.imwrite(tmp_grab_path+'afterpriceconfirmok-button.jpg', frame) 
+        #cv2.imwrite('.'+tmp_grab_path+'get_roomstatSecondMenberStat-button.jpg', frame) 
 
     def Recognize_Img(self,mode='None'):
         img_Path = r'./image/openCV_Img/'
@@ -229,7 +243,10 @@ class ADB:
             logging.info('總共抽到 {} 隻五星角色'.format(starNumber))
             print('總共抽到 {} 隻五星角色'.format(starNumber))
             return starNumber
+        
         img_Sample = cv2.imread(img_Path+mode+'.png',0)
+        if img_Sample is None:
+            img_Sample = cv2.imread(img_Path+mode+'.jpg',0)
         img_Compare = cv2.imread(img_Path+'checkPoint'+'.jpg',0)
         #img_Compare=cv2.resize(img_Compare,img_Sample.shape)
         (H, W) = img_Sample.shape
@@ -261,6 +278,15 @@ class ADB:
         if device_Name is None:
             device_Name = self.device_Name
         self.adb_call(device_Name,["shell","input","text",text])
+
+    def Swipe(self,x1,y1,x2,y2,device_Name=None):
+        if device_Name is None:
+            device_Name = self.device_Name
+        x1 = str(x1)
+        y1 = str(y1)
+        x2 = str(x2)
+        y2 = str(y2)
+        self.adb_call(device_Name, ["shell", "input", "swipe",x1,y1,x2,y2])
 
     def adb_call(self,adb_Path,device_List):
         command = [self.adb_Path,"-s",self.device_Name]
@@ -297,6 +323,7 @@ class ADB:
         
 if __name__ == '_main__':
     #obj = ADB(device_Name='127.0.0.1:62001',screen_Size=[720,1280])  #夜神
-    obj = ADB(device_Name='emulator-5556',screen_Size=[540,960])
+    obj = ADB(device_Name='emulator-5554',screen_Size=[540,960])
+    #obj = ADB(device_Name='emulator-5556',screen_Size=[540,960])
     hawd = obj.Get_Self_Hwnd(0)
     obj.Drag(467,1164,400,1164,370,1164)
